@@ -73,6 +73,7 @@ SHA `2691e0f`. First pass stands. Extra eyes on the same crate, not a new QA bot
 3. **Rooms are stubs.** Lessons is one URL. Lab has no live vertex while a job runs — there is no job on screen.
 4. **Attach is still not a waiting tty.** skill.md copy is on screen (no compose / k3s words). Copper cursor / login prompt is Marci.
 5. **Home keys still jump.** `l r d t a` set `home_sel` and open the room. Wrap / Enter is bindings. Marci.
+6. **`boot_reaches_home` needs a live kernel.** `cargo +1.85.0 test`: chrome locks pass. That older test fails here — nothing on `:18800`. I will not invent the lab.
 
 Did not invent CLI or compose.
 
