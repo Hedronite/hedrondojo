@@ -7,7 +7,13 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 
 pub struct Home<'a> { pub app: &'a App }
-const ROOMS: [&str; 5] = ["LESSONS", "LAB", "LATTICE", "TOMES", "ATTACH"];
+const ROOMS: [(&str, &str); 5] = [
+    ("LESSONS", "feed"),
+    ("LAB", "runner"),
+    ("LATTICE", "disk"),
+    ("TOMES", "checklist"),
+    ("ATTACH", "your bot"),
+];
 
 impl Widget for &Home<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
@@ -23,28 +29,30 @@ impl Widget for &Home<'_> {
             let bot = Layout::default().direction(Direction::Horizontal)
                 .constraints([Constraint::Percentage(34), Constraint::Percentage(33), Constraint::Percentage(33)]).split(rows[1]);
             let cells = [top[0], top[1], top[2], bot[0], bot[1], bot[2]];
-            for (i, name) in ROOMS.iter().enumerate() {
-                tile(name, self.app.home_sel == Some(i), cells[i], buf);
+            for (i, (name, hint)) in ROOMS.iter().enumerate() {
+                tile(name, hint, self.app.home_sel == Some(i), cells[i], buf);
             }
             mark(self.app, cells[5], buf);
         } else {
             let rows = Layout::default().direction(Direction::Vertical)
                 .constraints([Constraint::Percentage(20); 5]).split(grid);
-            for (i, name) in ROOMS.iter().enumerate() {
-                tile(name, self.app.home_sel == Some(i), rows[i], buf);
+            for (i, (name, hint)) in ROOMS.iter().enumerate() {
+                tile(name, hint, self.app.home_sel == Some(i), rows[i], buf);
             }
         }
         status_line(self.app, chunks[1], buf);
     }
 }
 
-fn tile(title: &str, focus: bool, area: Rect, buf: &mut Buffer) {
+fn tile(title: &str, hint: &str, focus: bool, area: Rect, buf: &mut Buffer) {
     let border = if focus { theme::COPPER } else { theme::BORDER };
     let fill = if focus { theme::BG_FOCUS } else { theme::BG_PANEL };
     let title_style = if focus { theme::copper() } else { theme::patina() };
     let block = Block::default().borders(Borders::ALL).border_style(Style::default().fg(border))
         .style(Style::default().bg(fill)).title(Span::styled(title, title_style));
+    let inner = block.inner(area);
     block.render(area, buf);
+    Paragraph::new(Span::styled(hint, theme::muted())).render(inner, buf);
     if focus && area.width > 2 {
         let x = area.x.saturating_add(area.width.saturating_sub(2));
         buf.get_mut(x, area.y).set_fg(theme::LAPIS).set_symbol("◆");
@@ -62,15 +70,14 @@ fn mark(app: &App, area: Rect, buf: &mut Buffer) {
 
 fn status_line(app: &App, area: Rect, buf: &mut Buffer) {
     let ready = app.ready.as_ref();
-    let ver = ready.map(|r| r.version.as_str()).filter(|s| !s.is_empty()).unwrap_or("HedronOS 0.1");
     let rows = ready.map(|r| r.rows()).unwrap_or(0);
     let (feed, fs) = match ready.and_then(|r| r.freshness()) {
         Some(ts) => (format!("feed {ts}"), theme::regent()),
-        None => ("feed ·".into(), theme::muted()),
+        None => ("feed ·".into(), theme::fire()),
     };
     let attach = if app.bot_attached { Span::styled("attach yes", Style::default().fg(theme::AETHER)) } else { Span::styled("attach ·", theme::muted()) };
     Paragraph::new(Line::from(vec![
-        Span::styled(format!("{ver}    "), theme::copper().add_modifier(Modifier::BOLD)),
+        Span::styled("HEDRONOS 0.1    ", theme::copper().add_modifier(Modifier::BOLD)),
         Span::styled(format!("lattice {rows}    "), theme::muted()),
         Span::styled(format!("{feed}    "), fs),
         attach, Span::raw("      "), Span::styled("h l r d t a q", theme::muted()),
