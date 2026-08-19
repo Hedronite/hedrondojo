@@ -1,0 +1,21 @@
+use ratatui::style::{Color, Modifier, Style};
+pub const BG: Color = Color::Rgb(10, 10, 14);
+pub const BG_PANEL: Color = Color::Rgb(16, 18, 26);
+pub const BG_FOCUS: Color = Color::Rgb(22, 25, 39);
+pub const COPPER: Color = Color::Rgb(184, 115, 51);
+pub const PATINA: Color = Color::Rgb(160, 102, 40);
+pub const REGENT: Color = Color::Rgb(128, 157, 175);
+pub const LAPIS: Color = Color::Rgb(30, 58, 138);
+pub const TEXT: Color = Color::Rgb(232, 232, 237);
+pub const MUTED: Color = Color::Rgb(107, 114, 128);
+pub const BORDER: Color = Color::Rgb(31, 35, 53);
+pub const AETHER: Color = Color::Rgb(46, 139, 87);
+pub const FIRE: Color = Color::Rgb(217, 119, 87);
+pub fn copper() -> Style { Style::default().fg(COPPER) }
+pub fn patina() -> Style { Style::default().fg(PATINA) }
+pub fn regent() -> Style { Style::default().fg(REGENT) }
+pub fn muted() -> Style { Style::default().fg(MUTED) }
+pub fn text() -> Style { Style::default().fg(TEXT) }
+pub fn fire() -> Style { Style::default().fg(FIRE) }
+pub fn lapis() -> Style { Style::default().fg(LAPIS) }
+pub fn italic_regent() -> Style { Style::default().fg(REGENT).add_modifier(Modifier::ITALIC) }

@@ -1,0 +1,23 @@
+services:
+  kernel:
+    build: .
+    ports:
+      - "127.0.0.1:18800:18800"
+    volumes:
+      - ./seed:/var/hedron/seed:ro
+      - lab-data:/var/hedron/data
+      - ./vault:/var/hedron/vault
+    environment:
+      LESSONS_FEED: https://hedronite.com
+      LATTICE_DB: /var/hedron/data/lattice.db
+      LAB_BIND: 0.0.0.0
+      LAB_PORT: "18800"
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18800/ready', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+volumes:
+  lab-data:

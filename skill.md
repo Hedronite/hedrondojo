@@ -1,0 +1,1 @@
+This folder is a Hedronite lab. Run `./install.sh`. When Compose is up, treat `vault/` as the workshop notes and https://hedronite.com as the lesson feed. Do not look for k3s, Tailscale, or PDF tomes. If a lab needs a book, open `checklists/tomes.md`.
