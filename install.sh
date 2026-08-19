@@ -39,7 +39,6 @@ docker_engine_ok() {
 if docker_engine_ok; then
   :
 elif command -v colima >/dev/null 2>&1; then
-  # Docker is not up. Colima is present — start it. Do not do this if Docker already works.
   colima start
   if ! docker_engine_ok; then
     echo "container runtime is not ready"
@@ -53,9 +52,7 @@ else
   exit 1
 fi
 
-docker compose up -d
-
-# Never delete seed/lattice.db. The image copies it into lab-data.
+# Never delete seed/lattice.db. Build the template first so compose can copy it.
 if [[ ! -s "$ROOT/seed/lattice.db" ]]; then
   if command -v sqlite3 >/dev/null 2>&1 && [[ -f "$ROOT/seed/schema.sql" && -f "$ROOT/seed/seed.sql" ]]; then
     sqlite3 "$ROOT/seed/lattice.db" < "$ROOT/seed/schema.sql"
@@ -65,6 +62,21 @@ if [[ ! -s "$ROOT/seed/lattice.db" ]]; then
     exit 1
   fi
 fi
+
+docker compose up -d
+
+wait_ready() {
+  local i
+  for i in $(seq 1 30); do
+    if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18800/ready', timeout=2)" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "kernel not ready on 127.0.0.1:18800" >&2
+  return 1
+}
+wait_ready
 
 if [[ "$HEADLESS" -eq 0 ]]; then
   if [[ "$OS_NAME" == Darwin ]]; then
