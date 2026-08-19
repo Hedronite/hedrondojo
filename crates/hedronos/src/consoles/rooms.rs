@@ -6,7 +6,7 @@ use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph, Widget};
 
-fn room(title: &str, body: Vec<Line>, area: Rect, buf: &mut Buffer) {
+pub(crate) fn room(title: &str, body: Vec<Line>, area: Rect, buf: &mut Buffer) {
     fill_bg(area, buf);
     let chunks = Layout::default().direction(Direction::Vertical)
         .constraints([Constraint::Min(3), Constraint::Length(1)]).split(area);
@@ -15,6 +15,10 @@ fn room(title: &str, body: Vec<Line>, area: Rect, buf: &mut Buffer) {
     let inner = block.inner(chunks[0]);
     block.render(chunks[0], buf);
     Paragraph::new(body).render(inner, buf);
+    if chunks[0].width > 2 {
+        let x = chunks[0].x.saturating_add(chunks[0].width.saturating_sub(2));
+        buf.get_mut(x, chunks[0].y).set_fg(theme::LAPIS).set_symbol("◆");
+    }
     Paragraph::new(Span::styled("esc / h  home    q  quit", theme::muted())).style(Style::default().bg(theme::BG)).render(chunks[1], buf);
 }
 

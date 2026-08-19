@@ -84,6 +84,7 @@ pub fn fill_bg(area: Rect, buf: &mut ratatui::buffer::Buffer) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::widgets::theme;
     use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
     #[test]
     fn boot_reaches_home() {
@@ -106,5 +107,140 @@ mod tests {
     fn home_starts_idle() {
         let app = App::new();
         assert_eq!(app.home_sel, None);
+    }
+
+    fn draw(app: &App, w: u16, h: u16) -> ratatui::buffer::Buffer {
+        let mut terminal = ratatui::Terminal::new(ratatui::backend::TestBackend::new(w, h)).unwrap();
+        terminal.draw(|f| app.draw(f)).unwrap();
+        terminal.backend().buffer().clone()
+    }
+
+    fn buf_text(buf: &ratatui::buffer::Buffer) -> String {
+        let mut out = String::new();
+        for y in buf.area.y..buf.area.y.saturating_add(buf.area.height) {
+            for x in buf.area.x..buf.area.x.saturating_add(buf.area.width) {
+                out.push_str(buf.get(x, y).symbol());
+            }
+            out.push('\n');
+        }
+        out
+    }
+
+    fn first_fg(buf: &ratatui::buffer::Buffer, needle: &str) -> Option<ratatui::style::Color> {
+        let chars: Vec<char> = needle.chars().collect();
+        if chars.is_empty() { return None; }
+        for y in buf.area.y..buf.area.y.saturating_add(buf.area.height) {
+            for x in buf.area.x..buf.area.x.saturating_add(buf.area.width) {
+                if buf.get(x, y).symbol().chars().next() != Some(chars[0]) { continue; }
+                let mut ok = true;
+                for (i, ch) in chars.iter().enumerate() {
+                    let cell = buf.get(x + i as u16, y);
+                    if cell.symbol().chars().next() != Some(*ch) { ok = false; break; }
+                }
+                if ok { return Some(buf.get(x, y).style().fg.unwrap_or(ratatui::style::Color::Reset)); }
+            }
+        }
+        None
+    }
+
+    fn assert_no_infra(text: &str) {
+        let lower = text.to_ascii_lowercase();
+        for bad in ["docker", "compose", "container", "k3s", "burst"] {
+            assert!(!lower.contains(bad), "visible chrome leaked {bad}: {text}");
+        }
+    }
+
+    fn assert_palette(buf: &ratatui::buffer::Buffer) {
+        use crate::widgets::theme;
+        use ratatui::style::Color;
+        let allowed = [
+            theme::BG, theme::BG_PANEL, theme::BG_FOCUS, theme::COPPER, theme::PATINA,
+            theme::REGENT, theme::LAPIS, theme::TEXT, theme::MUTED, theme::BORDER,
+            theme::AETHER, theme::FIRE, Color::Reset,
+        ];
+        for y in buf.area.y..buf.area.y.saturating_add(buf.area.height) {
+            for x in buf.area.x..buf.area.x.saturating_add(buf.area.width) {
+                let style = buf.get(x, y).style();
+                if let Some(fg) = style.fg {
+                    assert!(allowed.contains(&fg), "non-palette fg {fg:?} at {x},{y}");
+                }
+                if let Some(bg) = style.bg {
+                    assert!(allowed.contains(&bg), "non-palette bg {bg:?} at {x},{y}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn chrome_home_idle_and_wide_mark() {
+        let mut app = App::new();
+        app.console = Console::Home;
+        let buf = draw(&app, 120, 36);
+        let text = buf_text(&buf);
+        assert_no_infra(&text);
+        assert_palette(&buf);
+        assert!(text.contains("LESSONS"));
+        assert!(text.contains("LAB"));
+        assert!(text.contains("LATTICE"));
+        assert!(text.contains("TOMES"));
+        assert!(text.contains("ATTACH"));
+        assert!(text.contains("H 0.1"));
+        assert!(text.contains("HEDRONOS 0.1"));
+        assert_eq!(first_fg(&buf, "LESSONS"), Some(theme::PATINA));
+        assert_eq!(first_fg(&buf, "HEDRONOS 0.1"), Some(theme::COPPER));
+        assert_eq!(first_fg(&buf, "feed ·"), Some(theme::FIRE));
+    }
+
+    #[test]
+    fn chrome_home_copper_follows_sel_and_narrow_drops_mark() {
+        let mut app = App::new();
+        app.console = Console::Home;
+        app.home_sel = Some(0);
+        let wide = draw(&app, 120, 36);
+        assert_eq!(first_fg(&wide, "LESSONS"), Some(theme::COPPER));
+        let narrow = draw(&app, 80, 24);
+        let text = buf_text(&narrow);
+        assert!(text.contains("LESSONS"));
+        assert!(!text.contains("H 0.1"));
+        assert_eq!(first_fg(&narrow, "LESSONS"), Some(theme::COPPER));
+    }
+
+    #[test]
+    fn chrome_boot_dead_and_rooms() {
+        let mut app = App::new();
+        let boot = draw(&app, 80, 24);
+        let boot_text = buf_text(&boot);
+        assert!(boot_text.contains("HEDRONOS"));
+        assert!(boot_text.contains("student lab"));
+        assert!(!boot_text.contains("[ power on ]"));
+        assert_no_infra(&boot_text);
+        assert_palette(&boot);
+
+        app.dead = true;
+        app.fault = Some("runtime missing".into());
+        let dead = draw(&app, 80, 24);
+        let dead_text = buf_text(&dead);
+        assert!(dead_text.contains("HedronVM is powered off"));
+        assert!(dead_text.contains("[ power on ]"));
+        assert_eq!(first_fg(&dead, "[ power on ]"), Some(theme::COPPER));
+        assert_no_infra(&dead_text);
+        assert_palette(&dead);
+
+        app.dead = false;
+        app.console = Console::Lessons;
+        let room = draw(&app, 80, 24);
+        let room_text = buf_text(&room);
+        assert!(room_text.contains("LESSONS"));
+        assert!(room_text.contains("◆"));
+        assert_no_infra(&room_text);
+        assert_palette(&room);
+
+        app.console = Console::Attach;
+        let attach = draw(&app, 80, 24);
+        let attach_text = buf_text(&attach);
+        assert!(attach_text.contains("ATTACH"));
+        assert!(attach_text.contains("@hedronite-lab"));
+        assert_no_infra(&attach_text);
+        assert_palette(&attach);
     }
 }
