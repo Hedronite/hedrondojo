@@ -1,9 +1,14 @@
+# HedronOS kernel. Stranger path pulls the published image; nothing builds on first run.
+# Contributors: docker compose -f compose.yaml -f compose.dev.yaml up --build -d
+name: hedronos
+
 services:
   kernel:
-    image: ghcr.io/hedronite/hedronos-kernel:${HEDRONOS_KERNEL_TAG:-latest}
+    image: ${HEDRONOS_KERNEL_IMAGE:-ghcr.io/hedronite/hedronos-kernel}:${HEDRONOS_KERNEL_TAG:-latest}
     pull_policy: missing
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:18800:18800"
+      - "127.0.0.1:${HEDRONOS_PORT:-18800}:18800"
     volumes:
       - ./seed:/var/hedron/seed:ro
       - lab-data:/var/hedron/data
