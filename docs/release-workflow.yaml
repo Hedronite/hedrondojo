@@ -1,0 +1,126 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  kernel-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push kernel image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/hedronite/hedronos-kernel:${{ github.ref_name }}
+            ghcr.io/hedronite/hedronos-kernel:latest
+          cache-from: type=registry,ref=ghcr.io/hedronite/hedronos-kernel:buildcache
+          cache-to: type=registry,ref=ghcr.io/hedronite/hedronos-kernel:buildcache,mode=max
+
+      - name: Set kernel package visibility public
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api --method PATCH \
+            "/orgs/hedronite/packages/container/hedronos-kernel/visibility" \
+            -f visibility='public'
+
+  hedronos-binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            target: aarch64-apple-darwin
+            suffix: darwin-arm64
+          - runner: macos-latest
+            target: x86_64-apple-darwin
+            suffix: darwin-amd64
+          - runner: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            suffix: linux-arm64
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            suffix: linux-amd64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Linux cross toolchain
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu gcc-x86-64-linux-gnu
+
+      - name: Configure cargo linker
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p .cargo
+          cat >> .cargo/config.toml <<'EOF'
+          [target.aarch64-unknown-linux-gnu]
+          linker = "aarch64-linux-gnu-gcc"
+          [target.x86_64-unknown-linux-gnu]
+          linker = "x86_64-linux-gnu-gcc"
+          EOF
+
+      - name: Build hedronos
+        run: cargo build --release --manifest-path crates/hedronos/Cargo.toml --target ${{ matrix.target }}
+
+      - name: Stage binary
+        run: |
+          mkdir -p dist
+          cp "crates/hedronos/target/${{ matrix.target }}/release/hedronos" "dist/hedronos-${{ matrix.suffix }}"
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: hedronos-${{ matrix.suffix }}
+          path: dist/hedronos-${{ matrix.suffix }}
+
+  release:
+    needs: [hedronos-binaries, kernel-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: hedronos-*
+          merge-multiple: true
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
