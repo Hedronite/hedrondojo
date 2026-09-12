@@ -14,8 +14,8 @@ fn main() -> io::Result<()> {
     enable_raw_mode()?;
     execute!(stdout(), EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    app.begin_boot();
     terminal.draw(|f| app.draw(f))?;
-    app.step_boot();
     let result = run_loop(&mut terminal, &mut app);
     disable_raw_mode()?;
     execute!(stdout(), LeaveAlternateScreen)?;
@@ -38,7 +38,13 @@ fn run_loop<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut 
 
 fn smoke_home() -> io::Result<()> {
     let mut app = App::new();
-    app.step_boot();
+    app.begin_boot();
+    for _ in 0..64 {
+        app.tick();
+        if app.console == Console::Home {
+            break;
+        }
+    }
     if app.console != Console::Home {
         return Err(io::Error::new(io::ErrorKind::Other, format!("smoke: expected Home after Boot, got {:?}", app.console)));
     }

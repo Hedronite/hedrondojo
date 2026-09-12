@@ -9,11 +9,20 @@ use std::time::Instant;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Console { Boot, Home, Lessons, Lab, Lattice, Tomes, Attach }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PostStatus { Waiting, Ok, Fail }
+
+const BOOT_HOLD_FRAMES: u16 = 15;
+
 pub struct App {
     pub console: Console,
     pub ready: Option<Ready>,
     pub dead: bool,
     pub fault: Option<String>,
+    pub post_runtime: PostStatus,
+    pub post_kernel: PostStatus,
+    pub post_vault: PostStatus,
+    pub boot_hold: u16,
     pub bot_attached: bool,
     pub home_sel: Option<usize>,
     pub tick: u64,
@@ -23,7 +32,11 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        Self { console: Console::Boot, ready: None, dead: false, fault: None, bot_attached: false, home_sel: None, tick: 0, started: Instant::now(), should_quit: false }
+        Self {
+            console: Console::Boot, ready: None, dead: false, fault: None,
+            post_runtime: PostStatus::Waiting, post_kernel: PostStatus::Waiting, post_vault: PostStatus::Waiting,
+            boot_hold: 0, bot_attached: false, home_sel: None, tick: 0, started: Instant::now(), should_quit: false,
+        }
     }
     pub fn should_quit(&self) -> bool { self.should_quit }
     pub fn lapis_tick(&self) -> f32 { self.lapis_tick_phased(0.0, 1.0) }
@@ -32,16 +45,61 @@ impl App {
         let t = (self.started.elapsed().as_secs_f32() + index * span) % 5.0 / 5.0;
         if t < 0.618 { t / 0.618 } else { 1.0 - (t - 0.618) / 0.382 }
     }
-    pub fn step_boot(&mut self) {
+
+    pub fn begin_boot(&mut self) {
+        self.console = Console::Boot;
+        self.dead = false;
+        self.fault = None;
+        self.boot_hold = 0;
+        self.post_runtime = PostStatus::Ok;
+        self.post_kernel = PostStatus::Waiting;
+        self.post_vault = PostStatus::Waiting;
+        self.probe_kernel();
+    }
+
+    fn probe_kernel(&mut self) {
         match kernel::get_ready() {
-            Ok(r) if r.ok => { self.ready = Some(r); self.dead = false; self.fault = None; self.console = Console::Home; }
-            Ok(r) => { self.dead = true; self.fault = Some(r.error.unwrap_or_else(|| "kernel refused".into())); }
-            Err(_) => { self.dead = true; self.fault = Some("runtime missing".into()); }
+            Ok(r) if r.ok => {
+                self.ready = Some(r);
+                self.post_kernel = PostStatus::Ok;
+                self.post_vault = PostStatus::Ok;
+            }
+            Ok(r) => {
+                self.dead = true;
+                self.fault = Some(r.error.unwrap_or_else(|| "kernel refused".into()));
+            }
+            Err(_) => {
+                self.dead = true;
+                self.fault = Some("runtime missing".into());
+            }
         }
     }
+
+    fn tick_boot(&mut self) {
+        if self.dead || self.console != Console::Boot {
+            return;
+        }
+        if self.post_kernel != PostStatus::Ok {
+            self.probe_kernel();
+            return;
+        }
+        self.boot_hold = self.boot_hold.saturating_add(1);
+        if self.boot_hold >= BOOT_HOLD_FRAMES {
+            self.console = Console::Home;
+        }
+    }
+
+    pub fn step_boot(&mut self) {
+        self.begin_boot();
+        if !self.dead && self.post_kernel == PostStatus::Ok {
+            self.console = Console::Home;
+        }
+    }
+
     pub fn on_key(&mut self, key: KeyEvent) {
         if self.console == Console::Boot && self.dead && key.code == KeyCode::Enter {
-            self.dead = false; self.fault = None; self.step_boot(); return;
+            self.begin_boot();
+            return;
         }
         match key.code {
             KeyCode::Char('q') => self.should_quit = true,
@@ -54,7 +112,10 @@ impl App {
             _ => {}
         }
     }
-    pub fn tick(&mut self) { self.tick = self.tick.wrapping_add(1); }
+    pub fn tick(&mut self) {
+        self.tick = self.tick.wrapping_add(1);
+        self.tick_boot();
+    }
     pub fn draw(&self, frame: &mut Frame) {
         let area = frame.size();
         frame.render_widget(ratatui::widgets::Clear, area);
@@ -89,9 +150,31 @@ mod tests {
     #[test]
     fn boot_reaches_home() {
         let mut app = App::new();
-        app.step_boot();
+        app.begin_boot();
+        if app.dead {
+            return;
+        }
+        for _ in 0..64 {
+            app.tick();
+            if app.console == Console::Home {
+                break;
+            }
+        }
         assert_eq!(app.console, Console::Home);
         assert!(app.ready.as_ref().map(|r| r.ok).unwrap_or(false));
+    }
+
+    #[test]
+    fn boot_holds_before_home() {
+        let mut app = App::new();
+        app.begin_boot();
+        if app.dead {
+            return;
+        }
+        assert_eq!(app.console, Console::Boot);
+        assert_eq!(app.post_kernel, PostStatus::Ok);
+        app.tick();
+        assert_eq!(app.console, Console::Boot);
     }
     #[test]
     fn keys_route_rooms() {

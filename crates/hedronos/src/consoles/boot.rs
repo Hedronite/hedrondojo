@@ -1,4 +1,4 @@
-use crate::os::{fill_bg, App};
+use crate::os::{fill_bg, App, PostStatus};
 use crate::widgets::theme;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Rect};
@@ -22,13 +22,6 @@ impl Widget for &Boot<'_> {
             ]).render(area, buf);
             return;
         }
-        let gem = |i: f32| {
-            if self.app.lapis_tick_phased(i, 3.0) > 0.35 {
-                Span::styled("◆", theme::lapis())
-            } else {
-                Span::styled("◆", theme::muted())
-            }
-        };
         Paragraph::new(vec![
             Line::from(Span::styled("HEDRONOS", theme::copper())).alignment(Alignment::Center),
             Line::from(Span::styled("0.1", theme::patina())).alignment(Alignment::Center),
@@ -36,9 +29,44 @@ impl Widget for &Boot<'_> {
             Line::from(Span::styled("student lab", theme::italic_regent())).alignment(Alignment::Center),
             Line::from(Span::styled("not the mesh", theme::italic_regent())).alignment(Alignment::Center),
             Line::from(""),
-            Line::from(vec![gem(0.0), Span::raw("  "), Span::styled("runtime     ", theme::muted()), Span::styled("ok", theme::text())]).alignment(Alignment::Center),
-            Line::from(vec![gem(1.0), Span::raw("  "), Span::styled("kernel      ", theme::muted()), Span::styled("waiting", theme::text())]).alignment(Alignment::Center),
-            Line::from(vec![gem(2.0), Span::raw("  "), Span::styled("vault       ", theme::muted()), Span::styled("mounting", theme::text())]).alignment(Alignment::Center),
+            post_line(0.0, "runtime", self.app.post_runtime, "ok", self.app),
+            post_line(1.0, "kernel", self.app.post_kernel, kernel_label(self.app.post_kernel), self.app),
+            post_line(2.0, "vault", self.app.post_vault, vault_label(self.app.post_vault), self.app),
         ]).render(area, buf);
     }
+}
+
+fn kernel_label(s: PostStatus) -> &'static str {
+    match s {
+        PostStatus::Ok => "ready",
+        PostStatus::Fail => "fault",
+        PostStatus::Waiting => "waiting",
+    }
+}
+
+fn vault_label(s: PostStatus) -> &'static str {
+    match s {
+        PostStatus::Ok => "ok",
+        PostStatus::Fail => "fault",
+        PostStatus::Waiting => "mounting",
+    }
+}
+
+fn post_line(index: f32, label: &'static str, status: PostStatus, value: &'static str, app: &App) -> Line<'static> {
+    let gem = match status {
+        PostStatus::Fail => Span::styled("◆", theme::fire()),
+        PostStatus::Ok => Span::styled("◆", theme::lapis()),
+        PostStatus::Waiting if app.lapis_tick_phased(index, 3.0) > 0.35 => Span::styled("◆", theme::lapis()),
+        PostStatus::Waiting => Span::styled("◆", theme::muted()),
+    };
+    let value_style = match status {
+        PostStatus::Fail => theme::fire(),
+        _ => theme::text(),
+    };
+    Line::from(vec![
+        gem,
+        Span::raw("  "),
+        Span::styled(format!("{label:<12}", label = label), theme::muted()),
+        Span::styled(value, value_style),
+    ]).alignment(Alignment::Center)
 }
