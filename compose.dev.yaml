@@ -1,0 +1,5 @@
+# Contributor path: docker compose -f compose.yaml -f compose.dev.yaml up --build -d
+services:
+  kernel:
+    build: .
+    image: ghcr.io/hedronite/hedronos-kernel:dev
