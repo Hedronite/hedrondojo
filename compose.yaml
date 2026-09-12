@@ -1,6 +1,7 @@
 services:
   kernel:
-    build: .
+    image: ghcr.io/hedronite/hedronos-kernel:${HEDRONOS_KERNEL_TAG:-latest}
+    pull_policy: missing
     ports:
       - "127.0.0.1:18800:18800"
     volumes:
