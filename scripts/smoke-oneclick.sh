@@ -49,7 +49,8 @@ ready() { curl -fsS -m 3 "http://127.0.0.1:${PORT}/ready" | tee "$sandbox/ready.
 boot_home() { hedronos --smoke; }
 lab_ok() { [[ "$(lab echo ok 2>/dev/null | tail -n1 | tr -d '\r')" == ok ]]; }
 
-check "ready  $(cat "$sandbox/ready.json" 2>/dev/null)" ready
+check "ready" ready
+log "ready body $(cat "$sandbox/ready.json" 2>/dev/null)"
 check "hedronos Boot->Home" boot_home
 log "waiting on lab toolbox (first pull may dominate)"
 check "lab echo ok" lab_ok
