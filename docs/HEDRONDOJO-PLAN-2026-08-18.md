@@ -1,6 +1,6 @@
 ---
-artifact_id: HEDRONOS-PLAN-2026-08-18
-name: HedronOS — first playable student-lab OS
+artifact_id: HEDRONDOJO-PLAN-2026-08-18
+name: HedronDojo — first playable student-lab OS
 type: report
 doc_class: academy-plan
 domain: academy
@@ -13,7 +13,7 @@ parent: STUDENT-LAB-SKETCH-2026-08-18
 ---
 <!-- hal:authoritative:yaml -->
 
-# HedronOS (in a HedronVM)
+# HedronDojo (in a HedronVM)
 
 The student boots an OS. They do not run Docker.
 
@@ -27,7 +27,7 @@ Lanes: Marci = OS metaphor + screen map + first flow. Sati = visual law. Jupi = 
 
 | they say | it is |
 |----------|--------|
-| HedronOS | the terminal machine. PID they live in. |
+| HedronDojo | the terminal machine. PID they live in. |
 | HedronVM | whatever runs containers on their laptop (Docker Desktop, Colima, Orb). Invisible after boot. |
 | kernel | one Compose service: lattice (SQLite + DuckDB) + lesson fetchd + `lab` CLI |
 | consoles | screens. Not tabs. Not a web app. |
@@ -35,9 +35,9 @@ Lanes: Marci = OS metaphor + screen map + first flow. Sati = visual law. Jupi = 
 | disk | `vault/` (Obsidian) and `seed/lattice.db` |
 | network | localhost only. 8 GB laptop floor. |
 
-Boot copy (placeholder, Sati rewrites): `HEDRONOS 0.1 — student lab. Not the mesh.`
+Boot copy (placeholder, Sati rewrites): `HEDRONDOJO 0.1 — student lab. Not the mesh.`
 
-They never see `docker compose` after the first install. Re-open is `hedronos` (the binary). If Compose is down, boot says the VM is powered off and offers `power on` (which is `compose up -d` under the glass).
+They never see `docker compose` after the first install. Re-open is `hedrondojo` (the binary). If Compose is down, boot says the VM is powered off and offers `power on` (which is `compose up -d` under the glass).
 
 ## Screen map
 
@@ -122,7 +122,7 @@ hedronite-lab/
   seed/lattice.db            # schema + demo
   checklists/tomes.md
   crates/
-    hedronos/                # the OS. Marci flow, Sati chrome
+    hedrondojo/                # the OS. Marci flow, Sati chrome
       Cargo.toml
       src/
         main.rs              # crossterm + ratatui loop
@@ -157,7 +157,7 @@ services:
     # no redis, no k3s, no gemma, no tailscale
 ```
 
-`install.sh` (from Eli's sketch, plus one last step): detect OS → ensure a container runtime (prefer what is there) → `compose up -d` → seed lattice if empty → install Obsidian if missing → open `vault/` → **exec `hedronos`** so the first thing they see is Boot.
+`install.sh` (from Eli's sketch, plus one last step): detect OS → ensure a container runtime (prefer what is there) → `compose up -d` → seed lattice if empty → install Obsidian if missing → open `vault/` → **exec `hedrondojo`** so the first thing they see is Boot.
 
 Headless (`--headless`) skips Obsidian GUI and the TUI (cloud later).
 
@@ -172,9 +172,9 @@ Binary talks to `127.0.0.1:18800`. If that port is dead, Boot is the VM-off cons
 5. Lattice: see demo rows
 6. Tomes: open the checklist
 7. Attach: see the skill prompt
-8. `q` clean exit. Compose stays up. Next launch is `hedronos` only.
+8. `q` clean exit. Compose stays up. Next launch is `hedrondojo` only.
 
-That is "I booted HedronOS." Stop there.
+That is "I booted HedronDojo." Stop there.
 
 ## Hold
 
@@ -194,4 +194,4 @@ That is "I booted HedronOS." Stop there.
 
 ## Report line
 
-Screen map is the seven consoles above. Crate is `crates/hedronos` (ratatui + crossterm, `Widget for &T`). Compose is one `kernel` service on localhost:18800. `install.sh` ends by launching the OS.
+Screen map is the seven consoles above. Crate is `crates/hedrondojo` (ratatui + crossterm, `Widget for &T`). Compose is one `kernel` service on localhost:18800. `install.sh` ends by launching the OS.

@@ -12,7 +12,7 @@ impl Widget for &Boot<'_> {
         fill_bg(area, buf);
         if self.app.dead {
             Paragraph::new(vec![
-                Line::from(Span::styled("HEDRONOS", theme::copper())).alignment(Alignment::Center),
+                Line::from(Span::styled("HEDRONDOJO", theme::copper())).alignment(Alignment::Center),
                 Line::from(Span::styled("0.1", theme::patina())).alignment(Alignment::Center),
                 Line::from(""),
                 Line::from(Span::styled("HedronVM is powered off", theme::fire())).alignment(Alignment::Center),
@@ -23,7 +23,7 @@ impl Widget for &Boot<'_> {
             return;
         }
         Paragraph::new(vec![
-            Line::from(Span::styled("HEDRONOS", theme::copper())).alignment(Alignment::Center),
+            Line::from(Span::styled("HEDRONDOJO", theme::copper())).alignment(Alignment::Center),
             Line::from(Span::styled("0.1", theme::patina())).alignment(Alignment::Center),
             Line::from(""),
             Line::from(Span::styled("student lab", theme::italic_regent())).alignment(Alignment::Center),

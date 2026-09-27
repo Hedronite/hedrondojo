@@ -268,9 +268,9 @@ mod tests {
         assert!(text.contains("TOMES"));
         assert!(text.contains("ATTACH"));
         assert!(text.contains("H 0.1"));
-        assert!(text.contains("HEDRONOS 0.1"));
+        assert!(text.contains("HEDRONDOJO 0.1"));
         assert_eq!(first_fg(&buf, "LESSONS"), Some(theme::PATINA));
-        assert_eq!(first_fg(&buf, "HEDRONOS 0.1"), Some(theme::COPPER));
+        assert_eq!(first_fg(&buf, "HEDRONDOJO 0.1"), Some(theme::COPPER));
         assert_eq!(first_fg(&buf, "feed ·"), Some(theme::FIRE));
     }
 
@@ -293,7 +293,7 @@ mod tests {
         let mut app = App::new();
         let boot = draw(&app, 80, 24);
         let boot_text = buf_text(&boot);
-        assert!(boot_text.contains("HEDRONOS"));
+        assert!(boot_text.contains("HEDRONDOJO"));
         assert!(boot_text.contains("student lab"));
         assert!(!boot_text.contains("[ power on ]"));
         assert_no_infra(&boot_text);

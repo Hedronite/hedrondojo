@@ -1,14 +1,16 @@
-# HedronOS kernel. Stranger path pulls the published image; nothing builds on first run.
+# HedronDojo kernel. Stranger path pulls the published image; nothing builds on first run.
 # Contributors: docker compose -f compose.yaml -f compose.dev.yaml up --build -d
-name: hedronos
+# HEDRONOS_KERNEL_IMAGE, HEDRONOS_KERNEL_TAG, and HEDRONOS_PORT are deprecated
+# fallbacks used only when the matching HEDRONDOJO_* variable is unset.
+name: hedrondojo
 
 services:
   kernel:
-    image: ${HEDRONOS_KERNEL_IMAGE:-ghcr.io/hedronite/hedronos-kernel}:${HEDRONOS_KERNEL_TAG:-latest}
+    image: ${HEDRONDOJO_KERNEL_IMAGE:-${HEDRONOS_KERNEL_IMAGE:-ghcr.io/hedronite/hedrondojo-kernel}}:${HEDRONDOJO_KERNEL_TAG:-${HEDRONOS_KERNEL_TAG:-latest}}
     pull_policy: missing
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${HEDRONOS_PORT:-18800}:18800"
+      - "127.0.0.1:${HEDRONDOJO_PORT:-${HEDRONOS_PORT:-18800}}:18800"
     volumes:
       - ./seed:/var/hedron/seed:ro
       - lab-data:/var/hedron/data

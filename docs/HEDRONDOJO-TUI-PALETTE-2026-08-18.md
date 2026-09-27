@@ -1,15 +1,15 @@
 ---
-artifact_id: HEDRONOS-TUI-PALETTE-2026-08-18
-name: HedronOS TUI — ratatui palette, chrome, boot + home
+artifact_id: HEDRONDOJO-TUI-PALETTE-2026-08-18
+name: HedronDojo TUI — ratatui palette, chrome, boot + home
 type: report
 doc_class: academy-visual
 domain: academy
 status: DRAFT
 created: 2026-08-18
 author: Sati
-authority: Eli-pass / visual law for HedronOS
+authority: Eli-pass / visual law for HedronDojo
 capital_zero: none
-parent: HEDRONOS-PLAN-2026-08-18
+parent: HEDRONDOJO-PLAN-2026-08-18
 canon:
   - HEDRONITE-DESIGN-SYSTEM.md
   - HEDRONITE-POLYHEDRON-VISUAL-LANGUAGE.md
@@ -17,11 +17,11 @@ canon:
 ---
 <!-- hal:authoritative:yaml -->
 
-# HedronOS TUI visual law
+# HedronDojo TUI visual law
 
 This is a terminal OS. It is not a docker dashboard and not a ratatui demo.
 
-Tokens come from `HEDRONITE-DESIGN-SYSTEM.md`. Geometry language comes from the polyhedron file: copper is the edge, lapis is the vertex, the pane is glass (dark, quiet). HedronOS is the lived-in register (patina copper), not the landing-page shine.
+Tokens come from `HEDRONITE-DESIGN-SYSTEM.md`. Geometry language comes from the polyhedron file: copper is the edge, lapis is the vertex, the pane is glass (dark, quiet). HedronDojo is the lived-in register (patina copper), not the landing-page shine.
 
 I do not invent the lab CLI, compose, or bindings. Marci's screen map and keys stand. Jupi owns the crate and the kernel service. This file is palette, chrome, boot, and home.
 
@@ -45,7 +45,7 @@ Map tokens. Do not hard-code a second set.
 | `--bg-panel` | `#10121a` | `16, 18, 26` | Unfocused pane fill. |
 | `--bg-panel-elevated` | `#161927` | `22, 25, 39` | Focused pane fill. |
 | `--copper` | `#b87333` | `184, 115, 51` | Brand. Focused `Block` border. Wordmark. Primary action. |
-| `--copper-patina` | `#a06628` | `160, 102, 40` | Idle copper (HedronOS, not landing). Titles at rest. |
+| `--copper-patina` | `#a06628` | `160, 102, 40` | Idle copper (HedronDojo, not landing). Titles at rest. |
 | `--regent-grey` | `#809DAF` | `128, 157, 175` | Secondary / italic-equivalent. Feed freshness. Dim emphasis. |
 | `--lapis-lazuli` | `#1e3a8a` | `30, 58, 138` | Vertex. Ready tick. Live process. Boot POST dots. |
 | `--text-primary` | `#e8e8ed` | `232, 232, 237` | Body. |
@@ -92,12 +92,12 @@ Keys (Marci): render in muted on the status line, not as a help footer that eats
 One line. Always. Bottom. Not a second window.
 
 ```
-HEDRONOS 0.1    lattice 12    feed 2h    attach ·      h l r d t a q
+HEDRONDOJO 0.1    lattice 12    feed 2h    attach ·      h l r d t a q
 ```
 
 | Field | Color |
 |---|---|
-| `HEDRONOS 0.1` | copper |
+| `HEDRONDOJO 0.1` | copper |
 | `lattice N` | muted (count is secondary) |
 | `feed …` | regent-grey if fresh, muted if stale, fire if never |
 | `attach` | aether if yes, muted `·` if no |
@@ -112,7 +112,7 @@ Full-frame. No `Block`. No status bar. Floor is `--bg`.
 Feel: firmware POST. Not a spinner over logs.
 
 ```
-                         HEDRONOS
+                         HEDRONDOJO
                            0.1
 
                       student lab
@@ -123,7 +123,7 @@ Feel: firmware POST. Not a spinner over logs.
                    ◆  vault       mounting
 ```
 
-Wordmark `HEDRONOS` is copper, centered. `0.1` is patina. The two lines under it are regent-grey italic if the tty has italic, else regent-grey. POST labels muted, values primary. Each `◆` starts muted, turns lapis when that step passes, fire if it fails. φ-phase the diamonds; they do not blink together.
+Wordmark `HEDRONDOJO` is copper, centered. `0.1` is patina. The two lines under it are regent-grey italic if the tty has italic, else regent-grey. POST labels muted, values primary. Each `◆` starts muted, turns lapis when that step passes, fire if it fails. φ-phase the diamonds; they do not blink together.
 
 Sequence (Marci): detect runtime → wait `GET /ready` → mount vault path → Home.
 
@@ -136,7 +136,7 @@ On success the frame holds one beat on `ready` (lapis), then Home. No fade libra
 Still Boot. Still no chrome. One fact, one action.
 
 ```
-                         HEDRONOS
+                         HEDRONDOJO
                            0.1
 
                  HedronVM is powered off
@@ -163,7 +163,7 @@ Wide tty (≥ 100 cols): 2×3 grid.
 │ checklist     │ │ your bot       │ │    H  0.1     │
 │               │ │                │ │               │
 └───────────────┘ └────────────────┘ └───────────────┘
-HEDRONOS 0.1    lattice 12    feed 2h    attach ·      h l r d t a q
+HEDRONDOJO 0.1    lattice 12    feed 2h    attach ·      h l r d t a q
 ```
 
 Narrow tty (< 100 cols): one column, same five rooms, sigil cell dropped. Status stays one line.
@@ -185,7 +185,7 @@ Same `Block` law. I am not specifying Lesson HTML or the `lab` contract.
 
 ## Crate notes for Jupi (visual only)
 
-When the crate exists, put tokens in `crates/hedronos/src/widgets/theme.rs` (name is a suggestion, not a CLI). `Color::Rgb` constants named after the design tokens. Widgets implement `Widget for &T`. `Block` for every room. Boot is a free widget, no `Block`.
+When the crate exists, put tokens in `crates/hedrondojo/src/widgets/theme.rs` (name is a suggestion, not a CLI). `Color::Rgb` constants named after the design tokens. Widgets implement `Widget for &T`. `Block` for every room. Boot is a free widget, no `Block`.
 
 Throw the `ratatui/templates` chrome away the same day it is generated.
 
