@@ -77,7 +77,7 @@ fn status_line(app: &App, area: Rect, buf: &mut Buffer) {
     };
     let attach = if app.bot_attached { Span::styled("attach yes", Style::default().fg(theme::AETHER)) } else { Span::styled("attach ·", theme::muted()) };
     Paragraph::new(Line::from(vec![
-        Span::styled("HEDRONOS 0.1    ", theme::copper().add_modifier(Modifier::BOLD)),
+        Span::styled("HEDRONDOJO 0.1    ", theme::copper().add_modifier(Modifier::BOLD)),
         Span::styled(format!("lattice {rows}    "), theme::muted()),
         Span::styled(format!("{feed}    "), fs),
         attach, Span::raw("      "), Span::styled("h l r d t a q", theme::muted()),

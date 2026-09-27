@@ -2,4 +2,4 @@
 services:
   kernel:
     build: .
-    image: ghcr.io/hedronite/hedronos-kernel:dev
+    image: ghcr.io/hedronite/hedrondojo-kernel:dev

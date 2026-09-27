@@ -1,6 +1,6 @@
 ---
-artifact_id: HEDRONOS-CHROME-REVIEW-2026-08-18
-name: HedronOS chrome review — crate vs palette
+artifact_id: HEDRONDOJO-CHROME-REVIEW-2026-08-18
+name: HedronDojo chrome review — crate vs palette
 type: report
 doc_class: academy-visual
 domain: academy
@@ -8,14 +8,14 @@ status: DRAFT
 created: 2026-08-18
 author: Sati
 authority: Eli-pass / visual law
-parent: HEDRONOS-TUI-PALETTE-2026-08-18
-crate: ideas/academy/hedron-lab/crates/hedronos
+parent: HEDRONDOJO-TUI-PALETTE-2026-08-18
+crate: ideas/academy/hedron-lab/crates/hedrondojo
 ---
 <!-- hal:authoritative:yaml -->
 
-# HedronOS chrome review
+# HedronDojo chrome review
 
-Reviewed `crates/hedronos` against `HEDRONOS-TUI-PALETTE-2026-08-18.md`. No GitHub, so Kimi (Cursor cloud) was not a tap. This is Sati on disk.
+Reviewed `crates/hedrondojo` against `HEDRONDOJO-TUI-PALETTE-2026-08-18.md`. No GitHub, so Kimi (Cursor cloud) was not a tap. This is Sati on disk.
 
 ## Pass
 
@@ -39,7 +39,7 @@ Reviewed `crates/hedronos` against `HEDRONOS-TUI-PALETTE-2026-08-18.md`. No GitH
 2. **Home has no selection.** Keys jump straight to rooms. Copper-on-focus needs `home_sel`. Bindings stay Marci.
 3. **Boot POST copy is frozen** (`ok` / `waiting` / `mounting`) even on the dead path you never see it. Values should follow kernel state when POST is actually shown.
 4. **Rooms are stubs.** Lessons is one URL line. Lab has no live vertex while a job runs. Fine this pass.
-5. **Attach prompt line** is a placeholder (`hedronos login: _`). Marci said she writes it from `skill.md`.
+5. **Attach prompt line** is a placeholder (`hedrondojo login: _`). Marci said she writes it from `skill.md`.
 6. **Kimi tap** needs a repo. None yet.
 
 No GitHub. I did not invent CLI or compose.
@@ -61,7 +61,7 @@ SHA `2691e0f`. First pass stands. Extra eyes on the same crate, not a new QA bot
 
 ### Painted this pass
 
-- Status wordmark is `HEDRONOS 0.1`. Kernel `version: "0.1"` no longer replaces it. `feed ·` is fire when never fetched.
+- Status wordmark is `HEDRONDOJO 0.1`. Kernel `version: "0.1"` no longer replaces it. `feed ·` is fire when never fetched.
 - Home tiles carry the palette hint (`feed` / `runner` / `disk` / `checklist` / `your bot`).
 - Room `Block`s have the lapis vertex (it was claimed last pass and missing on this SHA).
 - Attach is a room `Block`, not a free paragraph.

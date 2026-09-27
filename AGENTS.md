@@ -2,10 +2,10 @@
 
 ## Cursor Cloud specific instructions
 
-HedronOS student lab is one product delivered as two cooperating parts:
+HedronDojo, a DevOps training app and lab image, is one product delivered as two cooperating parts:
 
 - Kernel — a pure Python 3.12 stdlib HTTP service + `lab` CLI backed by SQLite (the "lattice" DB). Code lives in `lab/`.
-- HedronOS — a Rust ratatui TUI (the screen the student sits at). Code lives in `crates/hedronos/`. It talks to the kernel over localhost HTTP.
+- HedronDojo — a Rust ratatui TUI (the screen the student sits at). Code lives in `crates/hedrondojo/`. It talks to the kernel over localhost HTTP.
 
 ### Running the kernel (preferred dev path)
 
@@ -25,12 +25,12 @@ Docker Compose (`./install.sh`, `compose.yaml`) also works but is heavier/more f
 
 ### Building and running the TUI
 
-The crate needs Rust >= 1.85 (`crates/hedronos/Cargo.toml` sets `rust-version = "1.85"`). The base image's default 1.83 cannot build it; the update script installs and defaults to stable via rustup.
+The crate needs Rust >= 1.85 (`crates/hedrondojo/Cargo.toml` sets `rust-version = "1.85"`). The base image's default 1.83 cannot build it; the update script installs and defaults to stable via rustup.
 
 ```bash
-cargo build --release --manifest-path crates/hedronos/Cargo.toml
-./crates/hedronos/target/release/hedronos           # full TUI (needs a real terminal)
-./crates/hedronos/target/release/hedronos --smoke    # headless: boots + renders Home, exits 0
+cargo build --release --manifest-path crates/hedrondojo/Cargo.toml
+./crates/hedrondojo/target/release/hedrondojo           # full TUI (needs a real terminal)
+./crates/hedrondojo/target/release/hedrondojo --smoke    # headless: boots + renders Home, exits 0
 ```
 
 - The TUI reads live kernel data at boot via `HEDRON_KERNEL` (default `http://127.0.0.1:18800`). Home's status line shows `lattice <N>` and the feed timestamp; the Lattice console shows `<N> demo rows`.
@@ -41,7 +41,7 @@ cargo build --release --manifest-path crates/hedronos/Cargo.toml
 - Tests and the `--smoke` check require the kernel to be running first. `os::tests::boot_reaches_home` and `--smoke` both call `GET /ready`; with no kernel up they fail with "runtime missing" (an environment issue, not a code bug). Start `python3 -m lab serve`, then:
 
 ```bash
-cargo test --manifest-path crates/hedronos/Cargo.toml
+cargo test --manifest-path crates/hedrondojo/Cargo.toml
 ```
 
-- Lint: `cargo clippy --manifest-path crates/hedronos/Cargo.toml --all-targets` and `cargo fmt --manifest-path crates/hedronos/Cargo.toml --check`. Both surface pre-existing style nits (a `clippy::io_other_error` warning and rustfmt diffs) on the newer toolchain; neither is gated/blocking. The Python kernel has no configured linter.
+- Lint: `cargo clippy --manifest-path crates/hedrondojo/Cargo.toml --all-targets` and `cargo fmt --manifest-path crates/hedrondojo/Cargo.toml --check`. Both surface pre-existing style nits (a `clippy::io_other_error` warning and rustfmt diffs) on the newer toolchain; neither is gated/blocking. The Python kernel has no configured linter.

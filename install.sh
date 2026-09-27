@@ -1,20 +1,49 @@
 #!/usr/bin/env bash
-# hedronite-lab installer — HedronOS (kernel + TUI) and the lab toolbox.
+# hedronite-lab installer — HedronDojo (training app + kernel) and the lab toolbox.
 #
-#   curl -fsSL https://raw.githubusercontent.com/VirtualMachinist/hedronos/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Hedronite/hedrondojo/main/install.sh | bash
 #
 # Stranger path: no git, no cargo, no python on the host. Needs curl, tar, and a
 # container runtime (OrbStack, Docker Desktop, Colima, or Docker Engine on Linux).
 set -euo pipefail
 
-REPO_ORG="${HEDRONOS_REPO_ORG:-VirtualMachinist}"
-REPO_REF="${HEDRONOS_REF:-main}"
-INSTALL_ROOT="${HEDRONOS_HOME:-$HOME/.local/share/hedronite/hedronos}"
-SHARE_DIR="${HEDRONOS_SHARE_DIR:-$HOME/.local/share/hedronite}"
-BIN_DIR="${HEDRONOS_BIN_DIR:-$HOME/.local/bin}"
-PORT="${HEDRONOS_PORT:-18800}"
-LAB_IMAGE="${HEDRONOS_LAB_IMAGE:-ghcr.io/hedronite/lab:latest}"
-LAB_ZSH_URL="${HEDRONOS_LAB_ZSH_URL:-https://raw.githubusercontent.com/${REPO_ORG}/hedronite-devops-lab/main/shell/lab.zsh}"
+# HEDRONOS_* is a deprecated fallback: new name, then old name, then default.
+warn_if_deprecated() {
+  local new="$1" old="$2"
+  if [[ -z "${!new:-}" && -n "${!old:-}" ]]; then
+    printf 'hedronite-lab  warning: %s is deprecated; use %s\n' "$old" "$new" >&2
+  fi
+}
+
+warn_if_deprecated HEDRONDOJO_REPO_ORG HEDRONOS_REPO_ORG
+warn_if_deprecated HEDRONDOJO_REF HEDRONOS_REF
+warn_if_deprecated HEDRONDOJO_HOME HEDRONOS_HOME
+warn_if_deprecated HEDRONDOJO_SHARE_DIR HEDRONOS_SHARE_DIR
+warn_if_deprecated HEDRONDOJO_BIN_DIR HEDRONOS_BIN_DIR
+warn_if_deprecated HEDRONDOJO_PORT HEDRONOS_PORT
+warn_if_deprecated HEDRONDOJO_LAB_IMAGE HEDRONOS_LAB_IMAGE
+warn_if_deprecated HEDRONDOJO_LAB_ZSH_URL HEDRONOS_LAB_ZSH_URL
+warn_if_deprecated HEDRONDOJO_VERSION HEDRONOS_VERSION
+warn_if_deprecated HEDRONDOJO_KERNEL_IMAGE HEDRONOS_KERNEL_IMAGE
+warn_if_deprecated HEDRONDOJO_KERNEL_TAG HEDRONOS_KERNEL_TAG
+warn_if_deprecated HEDRONDOJO_BINARY HEDRONOS_BINARY
+warn_if_deprecated HEDRONDOJO_UPDATE HEDRONOS_UPDATE
+warn_if_deprecated HEDRONDOJO_NO_MODIFY_PATH HEDRONOS_NO_MODIFY_PATH
+warn_if_deprecated HEDRONDOJO_NO_OBSIDIAN HEDRONOS_NO_OBSIDIAN
+
+REPO_ORG="${HEDRONDOJO_REPO_ORG:-${HEDRONOS_REPO_ORG:-Hedronite}}"
+REPO_REF="${HEDRONDOJO_REF:-${HEDRONOS_REF:-main}}"
+INSTALL_ROOT="${HEDRONDOJO_HOME:-${HEDRONOS_HOME:-$HOME/.local/share/hedronite/hedrondojo}}"
+SHARE_DIR="${HEDRONDOJO_SHARE_DIR:-${HEDRONOS_SHARE_DIR:-$HOME/.local/share/hedronite}}"
+BIN_DIR="${HEDRONDOJO_BIN_DIR:-${HEDRONOS_BIN_DIR:-$HOME/.local/bin}}"
+PORT="${HEDRONDOJO_PORT:-${HEDRONOS_PORT:-18800}}"
+LAB_IMAGE="${HEDRONDOJO_LAB_IMAGE:-${HEDRONOS_LAB_IMAGE:-ghcr.io/hedronite/lab:latest}}"
+LAB_ZSH_URL="${HEDRONDOJO_LAB_ZSH_URL:-${HEDRONOS_LAB_ZSH_URL:-https://raw.githubusercontent.com/VirtualMachinist/hedronite-devops-lab/main/shell/lab.zsh}}"
+DO_UPDATE="${HEDRONDOJO_UPDATE:-${HEDRONOS_UPDATE:-0}}"
+NO_MODIFY_PATH="${HEDRONDOJO_NO_MODIFY_PATH:-${HEDRONOS_NO_MODIFY_PATH:-0}}"
+NO_OBSIDIAN="${HEDRONDOJO_NO_OBSIDIAN:-${HEDRONOS_NO_OBSIDIAN:-0}}"
+VERSION_OVERRIDE="${HEDRONDOJO_VERSION:-${HEDRONOS_VERSION:-}}"
+LOCAL_BINARY="${HEDRONDOJO_BINARY:-${HEDRONOS_BINARY:-}}"
 
 say()  { printf 'hedronite-lab  %s\n' "$*"; }
 fail() { printf 'hedronite-lab  %s\n' "$*" >&2; exit 1; }
@@ -23,22 +52,25 @@ usage() {
   cat <<'USAGE'
 Usage: install.sh [--headless]
 
-  Powers on the HedronOS kernel (127.0.0.1:18800), installs the hedronos and lab
-  commands into ~/.local/bin, then opens HedronOS.
+  Powers on the HedronDojo kernel (127.0.0.1:18800), installs the hedrondojo and lab
+  commands into ~/.local/bin, then opens HedronDojo.
 
   --headless   kernel + commands only; do not open Obsidian or the TUI
 
 Environment (all optional):
-  HEDRONOS_VERSION        release tag for binary + kernel image (default: VERSION file)
-  HEDRONOS_KERNEL_IMAGE   kernel image repository (default: ghcr.io/hedronite/hedronos-kernel)
-  HEDRONOS_KERNEL_TAG     kernel image tag (default: HEDRONOS_VERSION)
-  HEDRONOS_BINARY         use this local hedronos binary instead of downloading
-  HEDRONOS_HOME           where the kernel files live (default: ~/.local/share/hedronite/hedronos)
-  HEDRONOS_BIN_DIR        where hedronos and lab go (default: ~/.local/bin)
-  HEDRONOS_PORT           host port for the kernel (default: 18800)
-  HEDRONOS_REF            git ref fetched on the curl path (default: main)
-  HEDRONOS_UPDATE=1       refresh kernel files on the curl path (vault/ is kept)
-  HEDRONOS_NO_MODIFY_PATH=1  do not add ~/.local/bin to your shell rc
+  HEDRONDOJO_VERSION        release tag for binary + kernel image (default: VERSION file)
+  HEDRONDOJO_KERNEL_IMAGE   kernel image repository (default: ghcr.io/hedronite/hedrondojo-kernel)
+  HEDRONDOJO_KERNEL_TAG     kernel image tag (default: HEDRONDOJO_VERSION)
+  HEDRONDOJO_BINARY         use this local hedrondojo binary instead of downloading
+  HEDRONDOJO_HOME           where the kernel files live (default: ~/.local/share/hedronite/hedrondojo)
+  HEDRONDOJO_BIN_DIR        where hedrondojo and lab go (default: ~/.local/bin)
+  HEDRONDOJO_PORT           host port for the kernel (default: 18800)
+  HEDRONDOJO_REF            git ref fetched on the curl path (default: main)
+  HEDRONDOJO_UPDATE=1       refresh kernel files on the curl path (vault/ is kept)
+  HEDRONDOJO_NO_MODIFY_PATH=1  do not add ~/.local/bin to your shell rc
+
+  HEDRONOS_* names still work when the matching HEDRONDOJO_* variable is unset.
+  The installer prints a deprecation warning on stderr.
 
 Contributors (build the kernel locally instead of pulling):
   docker compose -f compose.yaml -f compose.dev.yaml up --build -d
@@ -72,13 +104,13 @@ if [[ -n "$script_path" && -f "$script_path" && -f "$(cd "$(dirname "$script_pat
   ROOT="$(cd "$(dirname "$script_path")" && pwd)"
 else
   ROOT="$INSTALL_ROOT"
-  if [[ ! -f "$ROOT/compose.yaml" || "${HEDRONOS_UPDATE:-0}" == "1" ]]; then
-    say "fetching HedronOS ($REPO_REF)"
+  if [[ ! -f "$ROOT/compose.yaml" || "$DO_UPDATE" == "1" ]]; then
+    say "fetching HedronDojo ($REPO_REF)"
     tmp_tree="$(mktemp -d)"
     trap 'rm -rf "$tmp_tree"' EXIT
-    curl -fsSL "https://github.com/${REPO_ORG}/hedronos/archive/${REPO_REF}.tar.gz" \
+    curl -fsSL "https://github.com/${REPO_ORG}/hedrondojo/archive/${REPO_REF}.tar.gz" \
       | tar -xz -C "$tmp_tree" --strip-components 1 \
-      || fail "could not fetch HedronOS from github.com/${REPO_ORG}/hedronos"
+      || fail "could not fetch HedronDojo from github.com/${REPO_ORG}/hedrondojo"
     mkdir -p "$ROOT"
     # The vault is the student's. Never overwrite an existing one.
     [[ -d "$ROOT/vault" ]] && rm -rf "$tmp_tree/vault"
@@ -88,8 +120,8 @@ fi
 cd "$ROOT"
 
 release_tag() {
-  if [[ -n "${HEDRONOS_VERSION:-}" ]]; then
-    echo "$HEDRONOS_VERSION"
+  if [[ -n "$VERSION_OVERRIDE" ]]; then
+    echo "$VERSION_OVERRIDE"
   elif [[ -s "$ROOT/VERSION" ]]; then
     tr -d '[:space:]' < "$ROOT/VERSION"
   else
@@ -148,7 +180,7 @@ memory_floor() {
     bytes="$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo)"
   fi
   if (( bytes > 0 && bytes < 7500000000 )); then
-    say "note: under 8 GB RAM; HedronOS may be slow"
+    say "note: under 8 GB RAM; HedronDojo may be slow"
   fi
 }
 
@@ -166,9 +198,10 @@ if [[ ! -s "$ROOT/seed/lattice.db" ]]; then
   fi
 fi
 
-export HEDRONOS_KERNEL_TAG="${HEDRONOS_KERNEL_TAG:-$TAG}"
-export HEDRONOS_PORT="$PORT"
-kernel_ref="${HEDRONOS_KERNEL_IMAGE:-ghcr.io/hedronite/hedronos-kernel}:${HEDRONOS_KERNEL_TAG}"
+export HEDRONDOJO_KERNEL_TAG="${HEDRONDOJO_KERNEL_TAG:-${HEDRONOS_KERNEL_TAG:-$TAG}}"
+export HEDRONDOJO_PORT="$PORT"
+export HEDRONDOJO_KERNEL_IMAGE="${HEDRONDOJO_KERNEL_IMAGE:-${HEDRONOS_KERNEL_IMAGE:-ghcr.io/hedronite/hedrondojo-kernel}}"
+kernel_ref="${HEDRONDOJO_KERNEL_IMAGE}:${HEDRONDOJO_KERNEL_TAG}"
 
 say "loading kernel $kernel_ref"
 if ! docker compose up -d --quiet-pull >"$ROOT/.kernel-up.log" 2>&1; then
@@ -185,14 +218,14 @@ done
 (( ready )) || fail "kernel is not answering on 127.0.0.1:${PORT}/ready"
 say "kernel ready on 127.0.0.1:${PORT}"
 
-# ------------------------------------------------------------------- hedronos
+# ----------------------------------------------------------------- hedrondojo
 platform_suffix() {
   case "${OS_NAME}-$(uname -m)" in
     Darwin-arm64|Darwin-aarch64) echo darwin-arm64 ;;
     Darwin-x86_64) echo darwin-amd64 ;;
     Linux-aarch64|Linux-arm64) echo linux-arm64 ;;
     Linux-x86_64) echo linux-amd64 ;;
-    *) fail "no hedronos build for ${OS_NAME} $(uname -m)" ;;
+    *) fail "no hedrondojo build for ${OS_NAME} $(uname -m)" ;;
   esac
 }
 
@@ -201,15 +234,15 @@ sha256_of() {
   else shasum -a 256 "$1" | awk '{print $1}'; fi
 }
 
-install_hedronos() {
+install_hedrondojo() {
   local plat url tmp dest marker
-  dest="$BIN_DIR/hedronos"
-  marker="$SHARE_DIR/hedronos.version"
+  dest="$BIN_DIR/hedrondojo"
+  marker="$SHARE_DIR/hedrondojo.version"
   mkdir -p "$BIN_DIR" "$SHARE_DIR"
 
-  if [[ -n "${HEDRONOS_BINARY:-}" ]]; then
-    [[ -x "$HEDRONOS_BINARY" ]] || fail "HEDRONOS_BINARY is not executable: $HEDRONOS_BINARY"
-    cp "$HEDRONOS_BINARY" "$dest.tmp" && chmod +x "$dest.tmp" && mv "$dest.tmp" "$dest"
+  if [[ -n "$LOCAL_BINARY" ]]; then
+    [[ -x "$LOCAL_BINARY" ]] || fail "local binary is not executable: $LOCAL_BINARY"
+    cp "$LOCAL_BINARY" "$dest.tmp" && chmod +x "$dest.tmp" && mv "$dest.tmp" "$dest"
     echo "local" > "$marker"
     return 0
   fi
@@ -220,21 +253,21 @@ install_hedronos() {
 
   plat="$(platform_suffix)"
   if [[ "$TAG" == latest ]]; then
-    url="https://github.com/${REPO_ORG}/hedronos/releases/latest/download/hedronos-${plat}"
+    url="https://github.com/${REPO_ORG}/hedrondojo/releases/latest/download/hedrondojo-${plat}"
   else
-    url="https://github.com/${REPO_ORG}/hedronos/releases/download/${TAG}/hedronos-${plat}"
+    url="https://github.com/${REPO_ORG}/hedrondojo/releases/download/${TAG}/hedrondojo-${plat}"
   fi
 
-  say "installing hedronos $TAG ($plat)"
+  say "installing hedrondojo $TAG ($plat)"
   tmp="$(mktemp)"
   if ! curl -fsSL "$url" -o "$tmp"; then
     rm -f "$tmp"
-    fail "could not download hedronos $TAG for $plat. Releases: https://github.com/${REPO_ORG}/hedronos/releases"
+    fail "could not download hedrondojo $TAG for $plat. Releases: https://github.com/${REPO_ORG}/hedrondojo/releases"
   fi
   if curl -fsSL "$url.sha256" -o "$tmp.sha256" 2>/dev/null; then
     if [[ "$(awk '{print $1}' "$tmp.sha256")" != "$(sha256_of "$tmp")" ]]; then
       rm -f "$tmp" "$tmp.sha256"
-      fail "hedronos download failed its checksum; re-run to retry"
+      fail "hedrondojo download failed its checksum; re-run to retry"
     fi
   fi
   rm -f "$tmp.sha256"
@@ -242,6 +275,12 @@ install_hedronos() {
   mv "$tmp" "$dest"
   [[ "$OS_NAME" == Darwin ]] && xattr -d com.apple.quarantine "$dest" >/dev/null 2>&1 || true
   echo "$TAG" > "$marker"
+}
+
+install_command_shim() {
+  # scripts/hedronos warns on stderr and execs the sibling hedrondojo.
+  cp "$ROOT/scripts/hedronos" "$BIN_DIR/hedronos"
+  chmod +x "$BIN_DIR/hedronos"
 }
 
 # ------------------------------------------------------------------------ lab
@@ -276,7 +315,7 @@ SHIM
 
 ensure_path() {
   case ":$PATH:" in *":$BIN_DIR:"*) return 0 ;; esac
-  [[ "${HEDRONOS_NO_MODIFY_PATH:-0}" == "1" ]] && return 0
+  [[ "$NO_MODIFY_PATH" == "1" ]] && return 0
   local line rc
   line="export PATH=\"$BIN_DIR:\$PATH\"  # hedronite-lab"
   case "$(basename "${SHELL:-sh}")" in
@@ -290,19 +329,20 @@ ensure_path() {
   say "added $BIN_DIR to PATH in $rc (new terminals pick it up)"
 }
 
-install_hedronos
+install_hedrondojo
+install_command_shim
 install_lab
 ensure_path
 
 # ---------------------------------------------------------------------- open
 say "notes vault: $ROOT/vault"
-say "re-open: hedronos     toolbox: lab echo ok"
+say "re-open: hedrondojo     toolbox: lab echo ok"
 
 if (( HEADLESS )); then
   exit 0
 fi
 
-if [[ "$OS_NAME" == Darwin && -d /Applications/Obsidian.app && "${HEDRONOS_NO_OBSIDIAN:-0}" != "1" ]]; then
+if [[ "$OS_NAME" == Darwin && -d /Applications/Obsidian.app && "$NO_OBSIDIAN" != "1" ]]; then
   open -ga Obsidian "$ROOT/vault" >/dev/null 2>&1 || true
 fi
 
@@ -312,6 +352,6 @@ fi
 
 # curl | bash leaves stdin on the pipe; hand the TUI the real terminal.
 if [[ -t 1 ]] && (exec </dev/tty) 2>/dev/null; then
-  exec "$BIN_DIR/hedronos" </dev/tty
+  exec "$BIN_DIR/hedrondojo" </dev/tty
 fi
-say "no terminal attached; run hedronos to open HedronOS"
+say "no terminal attached; run hedrondojo to open HedronDojo"

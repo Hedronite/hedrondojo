@@ -1,6 +1,6 @@
 # LAYOUT
 
-Authority: Marci `HEDRONOS-PLAN-2026-08-18` (OS map). Sati visual law. Eli: playable crate now.
+Authority: Marci `HEDRONDOJO-PLAN-2026-08-18` (OS map). Sati visual law. Eli: playable crate now.
 
 ## Kernel (compose service `kernel`)
 
@@ -16,7 +16,7 @@ Env: `LESSONS_FEED=https://hedronite.com`, `LATTICE_DB=/var/hedron/data/lattice.
 
 First boot copies `seed/lattice.db` into the data volume if that volume is empty. The repo seed is not mutated.
 
-HedronOS is host-side. It is not in the image.
+HedronDojo is host-side. It is not in the image.
 
 ## Kernel contract (as implemented)
 
@@ -32,11 +32,11 @@ CLI: `python -m lab fetch|status|query|serve`.
 
 ## install.sh
 
-Last step (unless `--headless`): exec `hedronos` (release binary if built, else `cargo run --manifest-path crates/hedronos/Cargo.toml`). `--headless` skips Obsidian and the TUI.
+Last step (unless `--headless`): exec `hedrondojo` (release binary if built, else `cargo run --manifest-path crates/hedrondojo/Cargo.toml`). `--headless` skips Obsidian and the TUI.
 
-## Crate (`crates/hedronos`)
+## Crate (`crates/hedrondojo`)
 
-Package + binary `hedronos`. Edition 2021. ratatui 0.29, crossterm 0.28. std HTTP to the kernel (no extra client crate).
+Package + binary `hedrondojo`. Edition 2021. ratatui 0.29, crossterm 0.28. std HTTP to the kernel (no extra client crate).
 
 ```
 src/main.rs

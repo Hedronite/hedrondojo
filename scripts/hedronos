@@ -1,0 +1,5 @@
+#!/bin/sh
+# Deprecated command name. Forwards to hedrondojo.
+printf '%s\n' "warning: 'hedronos' is deprecated and will be removed; use 'hedrondojo'" >&2
+here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec "$here/hedrondojo" "$@"

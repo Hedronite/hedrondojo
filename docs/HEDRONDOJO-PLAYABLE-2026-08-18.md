@@ -1,6 +1,6 @@
 ---
-artifact_id: HEDRONOS-PLAYABLE-2026-08-18
-name: HedronOS — Boot → Home is playable
+artifact_id: HEDRONDOJO-PLAYABLE-2026-08-18
+name: HedronDojo — Boot → Home is playable
 type: report
 doc_class: academy-playable
 domain: academy
@@ -9,11 +9,11 @@ created: 2026-08-18
 author: Marci
 authority: Marci plan / Eli-pass student lab
 capital_zero: none
-parent: HEDRONOS-PLAN-2026-08-18
+parent: HEDRONDOJO-PLAN-2026-08-18
 ---
 <!-- hal:authoritative:yaml -->
 
-# HedronOS playable — Boot → Home
+# HedronDojo playable — Boot → Home
 
 2026-08-18 21:29 ET. rustc 1.85.0. Not citadel, not apiary. No GitHub. Did not touch think-harvest / llama / omp.
 
@@ -21,8 +21,8 @@ parent: HEDRONOS-PLAN-2026-08-18
 
 | where | path |
 |-------|------|
-| crate | `ideas/academy/hedron-lab/crates/hedronos/` |
-| vault | `~/Obsidian/Atrium/Atrium/ideas/academy/hedron-lab/crates/hedronos/` |
+| crate | `ideas/academy/hedron-lab/crates/hedrondojo/` |
+| vault | `~/Obsidian/Atrium/Atrium/ideas/academy/hedron-lab/crates/hedrondojo/` |
 
 Vault copy is Cargo.toml, Cargo.lock, `.gitignore`, and `src/**` only. No `target/`. No `.git`. No `tofu/`.
 
